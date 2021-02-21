@@ -1,15 +1,79 @@
 <?php
-
-require("config.php");
+// Include config file
+require_once "config.php";
 
 // App Details
 $AppName = "sNote";
 $AppTagL = "Smart Note Manager";
 
 // Site Details
-$SiteTitle = "sNote : CRUD Appliaction";
+$SitenoteTitle = "sNote : CRUD Appliaction";
 $SiteNotes = "All Saved Notes";
 
+// Define variables and initialize with empty values
+$slno = $notetitle = $notedesc = $dcreated = $dmodified = "";
+$slno_err = $notetitle_err = $notedesc_err = $dcreated_err = $dmodified_err = "";
+
+// Processing form data when form is submitted
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Validate notetitle
+    $input_notetitle = trim($_POST["notetitle"]);
+    if (empty($input_notetitle)) {
+        $notetitle_err = "Please enter a notetitle.";
+    } elseif (!filter_var($input_notetitle, FILTER_VALIDATE_REGEXP, array("options" => array("regexp" => "/^[a-zA-Z\s]+$/")))) {
+        $notetitle_err = "Please enter a valid notetitle.";
+    } else {
+        $notetitle = $input_notetitle;
+    }
+
+    // Validate notedesc
+    $input_notedesc = trim($_POST["notedesc"]);
+    if (empty($input_notedesc)) {
+        $notedesc_err = "Please enter an notedesc.";
+    } else {
+        $notedesc = $input_notedesc;
+    }
+
+    // // Validate salary
+    // $input_salary = trim($_POST["salary"]);
+    // if (empty($input_salary)) {
+    //     $salary_err = "Please enter the salary amount.";
+    // } elseif (!ctype_digit($input_salary)) {
+    //     $salary_err = "Please enter a positive integer value.";
+    // } else {
+    //     $salary = $input_salary;
+    // }
+
+    // Check input errors before inserting in database
+    if (empty($notetitle_err) && empty($notedesc_err)) {
+        // Prepare an insert statement
+        $sql = "INSERT INTO snotelist (notetitle, notedesc) VALUES (?, ?)";
+
+        if ($stmt = mysqli_prepare($link, $sql)) {
+            // Bind variables to the prepared statement as parameters
+            mysqli_stmt_bind_param($stmt, "sss", $param_notetitle, $param_notedesc);
+
+            // Set parameters
+            $param_notetitle = $notetitle;
+            $param_notedesc = $notedesc;
+
+            // Attempt to execute the prepared statement
+            if (mysqli_stmt_execute($stmt)) {
+                // Records created successfully. Redirect to landing page
+                header("location: index.php");
+                exit();
+            } else {
+                echo "Something went wrong. Please try again later.";
+            }
+        }
+
+        // Close statement
+        mysqli_stmt_close($stmt);
+    }
+
+    // Close connection
+    mysqli_close($link);
+}
 ?>
 
 <!doctype html>
@@ -23,7 +87,7 @@ $SiteNotes = "All Saved Notes";
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
 
-    <title><?php echo "$SiteTitle"; ?></title>
+    <notetitle><?php echo "$SitenoteTitle"; ?></notetitle>
 </head>
 
 <body class="bg-dark">
@@ -62,51 +126,15 @@ $SiteNotes = "All Saved Notes";
     <div class="container my-5">
         <form>
             <div class="mb-3">
-                <!-- <label for="exampleFormControlInput1" class="form-label">Note Title</label> -->
-                <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="Note Title">
+                <!-- <label for="exampleFormControlInput1" class="form-label">Note noteTitle</label> -->
+                <input type="text" class="form-control" id="exampleFormControlInput1" placeholder="Note noteTitle">
             </div>
             <div class="mb-3">
                 <!-- <label for="exampleFormControlTextarea1" class="form-label">Example textarea</label> -->
-                <textarea class="form-control" id="exampleFormControlTextarea1" placeholder="Note Details" rows="5"></textarea>
+                <textarea class="form-control <?php echo (!empty($address_err)) ? 'has-error' : ''; ?>" id="exampleFormControlTextarea1" placeholder="Note Details" rows="5"></textarea>
             </div>
             <button type="submit" class="btn btn-primary">Add New Note</button>
         </form>
-    </div>
-
-    <h3 class="text-center text-light mb-3">
-        <?php echo "$SiteNotes"; ?>
-    </h3>
-
-    <div class="container my-5">
-        <table class="table table-dark table-hover table-bordered">
-            <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Title</th>
-                    <th scope="col">Description</th>
-                    <!-- <th scope="col">Date Created</th> -->
-                    <th scope="col" class="text-center">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <th scope="row">1</th>
-                    <td>Mark Hello World</td>
-                    <td>Easily make an element as wide or as tall (relative to its parent) with our width and height utilities. Skip to main content There's a newer version of Bootstrap 4!</td>
-                    <!-- <td>@mdo</td> -->
-                    <td class="text-center">
-                        <div class="d-flex flex-row-reverse bd-highlight">
-                            <div class="p-2 bd-highlight">
-                                <button type="button" class="btn btn-danger">Delete</button>
-                            </div>
-                            <div class="p-2 bd-highlight">
-                                <button type="button" class="btn btn-primary">Edit</button>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
     </div>
 
     <!-- Optional JavaScript; choose one of the two! -->
